@@ -1,5 +1,6 @@
 #!/bin/bash
 
+KEYROOT="${KEYROOT:-./keys}"
 set -euo pipefail
 
 # Public key encryption
@@ -29,17 +30,16 @@ digest() {
 }
 
 _print_sym_key() {
-	cat ./keys/$(digest ~/.ssh/id_rsa.pub) | decrypt
+	cat $KEYROOT/$(digest ~/.ssh/id_rsa.pub) | decrypt
 }
 
 share-key() {
 	local pubkey_file="$1"
-
-	_print_sym_key | encrypt $pubkey_file | ./keys/$(digest "$pubkey_file")
+	_print_sym_key | encrypt $pubkey_file > $KEYROOT/$(digest "$pubkey_file")
 }
 
 init-key() {
-	cat | encrypt ~/.ssh/id_rsa.pub > ./keys/$(digest ~/.ssh/id_rsa.pub)
+	cat | encrypt ~/.ssh/id_rsa.pub > $KEYROOT/$(digest ~/.ssh/id_rsa.pub)
 }
 
 symmetric-encrypt() { 
@@ -49,8 +49,3 @@ symmetric-encrypt() {
 symmetric-decrypt() { 
 	openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$(_print_sym_key) -out -
 }
-
-echo "Testing 123" | symmetric-encrypt > encrypted
-cat ./encrypted | symmetric-decrypt
-
-rm encrypted
