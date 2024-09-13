@@ -42,10 +42,15 @@ init-key() {
 	cat | encrypt ~/.ssh/id_rsa.pub > ./keys/$(digest ~/.ssh/id_rsa.pub)
 }
 
-symmetric-crypt() {
-	openssl enc -aes-256-cbc -pbkdf2 -iter 1000000 -salt -pass pass:$(_print_sym_key) $@ -out -
+symmetric-encrypt() { 
+	openssl enc -aes-256-cbc -pbkdf2 -salt -pass pass:$(_print_sym_key) $@ -out -
 }
 
-echo "Testing 123" | symmetric-crypt > encrypted
-cat ./encrypted | symmetric-crypt -d
+symmetric-decrypt() { 
+	openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$(_print_sym_key) -out -
+}
 
+echo "Testing 123" | symmetric-encrypt > encrypted
+cat ./encrypted | symmetric-decrypt
+
+rm encrypted
