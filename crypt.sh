@@ -8,16 +8,15 @@ KEYROOT="${KEYROOT:-./keys}"
 set -euo pipefail
 
 _require_rsa_key() {
-	local keyfile="${1:-$PUBLIC_KEY}"
+	local keyfile="${1}"
 	if ! [ -f "$keyfile" ]; then
-		echo "$keyfile is missing";
-		echo ""
-		echo "There are several ways to solve this:"
-		echo " 1. Generate a new keypair (ssh-keygen -t rsa -f ${keyfile/.pub/}"
-		echo " 2. Or specify the keypair using the PRIVATE_KEY override as such:"
-		echo "    PRIVATE_KEY=/path/to/rsa/key ./the-script.sh"
-		echo " 3. Or symlink a keypair in $HOME/.ssh"
-		echo ""
+		cat >&2 <<-EOF
+			$keyfile is missing.
+
+			You will need an RSA keypair to solve this:
+
+				ssh-keygen -t rsa -f ${keyfile/.pub/}
+		EOF
 		exit 2;
 	fi
 }
@@ -45,6 +44,8 @@ _rsa-decrypt() {
 
 _digest() {
 	local pubkey_file="$1"
+
+	_require_rsa_key "$pubkey_file"
 	ssh-keygen \
 		-f $pubkey_file \
 		-e \
@@ -55,27 +56,31 @@ _digest() {
 }
 
 _aes_key() {
-	_require_rsa_key "$PUBLIC_KEY"
+	local shared_key_file; shared_key_file="$KEYROOT/$(_digest "$PUBLIC_KEY")"
+	if ! test -f "$shared_key_file"; then
+		echo "$shared_key_file is missing." >&2
+		exit 3;
+	fi
 
-	cat $KEYROOT/$(_digest "$PUBLIC_KEY") \
-		| _rsa-decrypt
+	cat $shared_key_file | _rsa-decrypt
 }
 
 share-key() {
 	local pubkey_file="$1"
-	local key_file="$KEYROOT/$(_digest "$pubkey_file")"
+	local key_file; key_file="$KEYROOT/$(_digest "$pubkey_file")"
 
 	_aes_key \
 		| _rsa-encrypt $pubkey_file \
 		> $key_file
-	echo "$key_file written."
+	echo "${key_file} written."
 }
 
 revoke-key() {
 	local pubkey_file="$1"
-	local key_file="$KEYROOT/$(_digest "$pubkey_file")"
-	
-	rm -fv $KEYROOT/$(_digest "$pubkey_file")
+	local key_file; key_file="$KEYROOT/$(_digest "$pubkey_file")"
+
+	rm -fv "$key_file"
+	echo "${key_file} removed."
 }
 
 init-key() {
@@ -88,9 +93,17 @@ init-key() {
 }
 
 encrypt() { 
-	openssl enc -aes-256-cbc -pbkdf2 -salt -pass pass:$(_aes_key) -out -
+	local key="$(_aes_key)"
+
+	if [ "$key" != "" ]; then
+		openssl enc -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
+	fi
 }
 
-decrypt() { 
-	openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$(_aes_key) -out -
+decrypt() {
+	local key="$(_aes_key)"
+
+	if [ "$key" != "" ]; then
+		openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
+	fi
 }
