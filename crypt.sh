@@ -85,6 +85,7 @@ revoke-key() {
 
 init-key() {
 	local key_file="$KEYROOT/$(_digest "$PUBLIC_KEY")"
+	mkdir -p "$(dirname "$key_file")"
 	cat \
 		| _rsa-encrypt $PUBLIC_KEY \
 		> $key_file
