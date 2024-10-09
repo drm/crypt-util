@@ -25,21 +25,54 @@ _require_rsa_key() {
 _rsa-encrypt() {
 	local pubkey_file="$1"
 
+	ssh-keygen -f "$pubkey_file" -e -m pem > "${pubkey_file}.pem" 
+
 	openssl \
 		pkeyutl \
 		-encrypt \
-		-inkey <(ssh-keygen -f "$pubkey_file" -e -m pem 2>/dev/null) \
+		-inkey "${pubkey_file}.pem" \
 		-pubin \
 		-out -
 }
 
 # RSA private key decryption
 _rsa-decrypt() {
-	openssl \
+	local privkey_file="${PRIVATE_KEY}"
+	local pem_file="${privkey_file}.pem"
+
+	rm -f $pem_file
+	if ! openssl rsa -in $privkey_file -outform pem -out - > $pem_file 2>/dev/null; then
+		echo "Failed to extract PEM for $privkey_file." >&2
+		if grep 'OPENSSH PRIVATE KEY' $privkey_file >/dev/null; then
+			cat >&2 <<-EOF 
+			Your private key seems to be in OpenSSH format, which is not supported by openssl.
+
+			Try converting it using the following command:
+
+			    cp $privkey_file{,.bak}
+			    ssh-keygen -p -m PEM -f $privkey_file
+			
+			Note that this only changes the file format, not the actual key itself, and this 
+			remains compatible with OpenSSH. When unsure, verify the fingerprints as such:
+
+			    ssh-keygen -l -f $privkey_file
+			    ssh-keygen -l -f $privkey_file.bak
+			EOF
+		fi
+		exit 2;
+	fi
+	chmod 400 "$pem_file"
+	
+	if ! openssl \
 		pkeyutl \
 		-decrypt \
-		-inkey <(openssl rsa -in $PRIVATE_KEY -outform pem 2>/dev/null) \
-		-out -
+		-inkey $pem_file \
+		-out -; then
+		echo "Failed to decrypt using $pem_file." >&2
+		exit 3;
+	fi
+	
+	rm -f "$pem_file"
 }
 
 _digest() {
