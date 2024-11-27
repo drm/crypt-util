@@ -131,7 +131,9 @@ encrypt() {
 
 	if [ "$key" != "" ]; then
 		openssl enc -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
+		return 0
 	fi
+	return 1
 }
 
 decrypt() {
@@ -139,5 +141,7 @@ decrypt() {
 
 	if [ "$key" != "" ]; then
 		openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
+		return 0
 	fi
+	return 1
 }
