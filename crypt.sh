@@ -117,7 +117,7 @@ revoke-key() {
 }
 
 init-key() {
-	local key_file="$KEYROOT/$(_digest "$PUBLIC_KEY")"
+	local key_file; key_file="$KEYROOT/$(_digest "$PUBLIC_KEY")"
 	mkdir -p "$(dirname "$key_file")"
 	cat \
 		| _rsa-encrypt $PUBLIC_KEY \
@@ -127,7 +127,7 @@ init-key() {
 }
 
 encrypt() { 
-	local key="$(_aes_key)"
+	local key; key="$(_aes_key)"
 
 	if [ "$key" != "" ]; then
 		openssl enc -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
@@ -135,7 +135,7 @@ encrypt() {
 }
 
 decrypt() {
-	local key="$(_aes_key)"
+	local key; key="$(_aes_key)"
 
 	if [ "$key" != "" ]; then
 		openssl enc -d -aes-256-cbc -pbkdf2 -salt -pass pass:$key -out -
