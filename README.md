@@ -1,3 +1,12 @@
+# Deprecated
+
+**This project is no longer maintained as of Feb 2026**
+
+Use of this utility is superseded by 'pass', see
+[passwordstore.org](https://passwordstore.org), which utilizes exactly what
+this repo is supposed to do, except it uses [GPG](https://gnupg.org) for
+encryption rather than `openssl`, which is more versatile anyway.
+
 # Encrypted files in git
 
 Basics: encrypted files are shared using a symmetric key. The symmetric key is
