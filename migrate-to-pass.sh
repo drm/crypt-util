@@ -12,20 +12,24 @@
 ## afterwards using the 'pass init -p ... [gpg id] [gpg id2]' command. See
 ## the 'pass' manpages for more info.
 ##
-## KEYROOT
-##		Where crypt-util stores the symmetric keys
+## Parameters:
 ##
-## SECRETS_DIR
+## 	SECRETS_DIR
 ##		The directory containing secrets to be imported. Note that all
 ##		secrets are imported. I suggest clever use of `git rebase -i`
 ##		inside your password store if you wish to exclude some.
 ##
-## PASS_INSERT_ROOT
+## 	PASS_INSERT_ROOT
 ## 		The sub directory to use in pass. With PASS_INSERT_ROOT 'foo/bar',
 ##		a secret with name 'baz' will be saved in 'foo/bar/baz'.
 ##
-## PASSWORD_STORE_DIR
+## Environment variables:
+##
+## 	PASSWORD_STORE_DIR
 ##		The password store dir for 'pass' to use.
+##
+## 	KEYROOT
+##		Where crypt-util stores the symmetric keys
 ##
 
 set -euo pipefail
