@@ -7,6 +7,9 @@ Use of this utility is superseded by 'pass', see
 this repo is supposed to do, except it uses [GPG](https://gnupg.org) for
 encryption rather than `openssl`, which is more versatile anyway.
 
+See [migrate-to-pass.sh](migrate-to-pass.sh) for a strategy on how to migrate
+to pass.
+
 # Encrypted files in git
 
 Basics: encrypted files are shared using a symmetric key. The symmetric key is
